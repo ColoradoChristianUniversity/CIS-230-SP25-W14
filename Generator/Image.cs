@@ -72,7 +72,7 @@ public class Image
     {
         var borderPaint = new SKPaint
         {
-            Color = SKColors.Red,
+            Color = SKColors.SkyBlue,
             Style = SKPaintStyle.Stroke,
             StrokeWidth = 5
         };
