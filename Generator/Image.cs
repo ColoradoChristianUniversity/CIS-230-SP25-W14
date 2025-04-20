@@ -36,25 +36,39 @@ public class Image
     }
 
     public void Generate(int count)
+{
+    if (count <= 0)
     {
-        if (count <= 0)
-        {
-            return;
-        }
-
-        EnsureDirectoryExists(RootFolderPath);
-
-        for (int i = 0; i < count; i++)
-        {
-            var value = Random.Shared.Next(-1000, 1000);
-            var date = _dateFactory().AddDays(value);
-            var text = date.ToString("MMM. dd, yyyy");
-            var fileName = date.ToString("yyyy-MM-dd") + ".png";
-            var filePath = System.IO.Path.Combine(RootFolderPath, fileName);
-
-            CreateImage(filePath, text);
-        }
+        return;
     }
+
+    EnsureDirectoryExists(RootFolderPath);
+
+    Dictionary<string, int> fileNameCounts = new Dictionary<string, int>();
+
+    for (int i = 0; i < count; i++)
+    {
+        var value = Random.Shared.Next(-1000, 1000);
+        var date = _dateFactory().AddDays(value);
+        var text = date.ToString("MMM. dd, yyyy");
+        var baseFileName = date.ToString("yyyy-MM-dd");
+        var fileName = baseFileName + ".png";
+
+        // Handle duplicates by appending a counter
+        if (fileNameCounts.ContainsKey(baseFileName))
+        {
+            fileNameCounts[baseFileName]++;
+            fileName = $"{baseFileName}-{fileNameCounts[baseFileName]}.png";
+        }
+        else
+        {
+            fileNameCounts[baseFileName] = 0;
+        }
+
+        var filePath = System.IO.Path.Combine(RootFolderPath, fileName);
+        CreateImage(filePath, text);
+    }
+}
 
     private void CreateImage(string filePath, string text)
     {
