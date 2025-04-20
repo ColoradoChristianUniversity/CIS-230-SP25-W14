@@ -176,6 +176,6 @@ public class ImageTests : IDisposable
         var file = Directory.GetFiles(_testPath).Single();
         var result = Image.GetFileCreationUtc(file);
 
-        result.Should().Be(_fixedDate.ToUniversalTime());
+        result.Should().Be(DateOnly.FromDateTime(_fixedDate));
     }
 }
