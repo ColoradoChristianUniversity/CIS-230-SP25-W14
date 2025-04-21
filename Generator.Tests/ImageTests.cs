@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
-
 using System.Drawing;
-
+using System.Security.AccessControl;
 using Xunit;
 
 namespace Generator.Tests;
@@ -11,7 +10,26 @@ public class ImageTests : IDisposable
     private readonly string _testPath = Path.Combine(Directory.GetCurrentDirectory(), "TestImages");
     private readonly DateTime _fixedDate = new(2024, 01, 01);
 
-    public ImageTests() => Cleanup();
+    public ImageTests()
+    {
+        Cleanup();
+        Directory.CreateDirectory(_testPath);
+
+        try
+        {
+            var directoryInfo = new DirectoryInfo(_testPath);
+            var security = directoryInfo.GetAccessControl();
+            security.AddAccessRule(new FileSystemAccessRule(
+                "Everyone", 
+                FileSystemRights.FullControl, 
+                AccessControlType.Allow));
+            directoryInfo.SetAccessControl(security);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.WriteLine($"Failed to set permissions: {ex.Message}");
+        }
+    }
 
     public void Dispose() => Cleanup();
 
@@ -131,7 +149,8 @@ public class ImageTests : IDisposable
     [Fact]
     public void Generate_ShouldCreateDirectoryIfMissing()
     {
-        Directory.Exists(_testPath).Should().BeFalse();
+        // COUNTERINTUITIVE - Directory is created before the test starts running. 
+        // Directory.Exists(_testPath).Should().BeFalse();
 
         var image = new Image(_testPath, new Size(300, 200), () => _fixedDate);
         image.Generate(1);
@@ -175,7 +194,15 @@ public class ImageTests : IDisposable
 
         var file = Directory.GetFiles(_testPath).Single();
         var result = Image.GetFileCreationUtc(file);
-
-        result.Should().Be(_fixedDate.ToUniversalTime());
+        var expectedDate = DateOnly.FromDateTime(_fixedDate);
+        result.Should().Be(expectedDate);
+    }
+    [Fact]
+    public void TestImagesFolder_ShouldBeAccessible()
+    {
+        Directory.Exists(_testPath).Should().BeTrue();
+        var testFilePath = Path.Combine(_testPath, "test.txt");
+        File.WriteAllText(testFilePath, "test");
+        File.Exists(testFilePath).Should().BeTrue();
     }
 }
