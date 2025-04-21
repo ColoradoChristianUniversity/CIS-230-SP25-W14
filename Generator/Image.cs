@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-
 using SkiaSharp;
 
 namespace Generator;
@@ -35,7 +34,7 @@ public class Image
         _dateFactory = dateFactory ?? (() => DateTime.Now);
     }
 
-    public void Generate(int count)
+    public void Generate(int count, Spectre.Console.ProgressTask? task = null)
     {
         if (count <= 0)
         {
@@ -53,6 +52,7 @@ public class Image
             var filePath = System.IO.Path.Combine(RootFolderPath, fileName);
 
             CreateImage(filePath, text);
+            task?.Increment(1);
         }
     }
 
